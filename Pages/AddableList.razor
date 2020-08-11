@@ -1,0 +1,107 @@
+﻿@page "/addablelist"
+
+@using BlazorTest.Data;
+@inject AddableListService ListService
+
+<h1>Addable list demo</h1>
+
+<p>Demo of adding a text element to combo box list. </p>
+
+@if (addableElementsList == null)
+{
+	<p>Loading...</p>
+}
+else
+{
+	@if (addableElementsList.Count == 0)
+	{
+		<select disabled name="addableselect">
+			<option selected disabled>-- List is empty --</option>
+		</select>
+	}
+	else
+	{
+		<select name="addableselect">
+			@foreach (var item in addableElementsList)
+			{
+				<option>@item.Text</option>
+			}
+		</select>
+	}
+	<br />
+	if (lastAddedElementValidity == null)
+	{
+		<br/>
+	}
+	else
+	{
+		if (lastAddedElementValidity == true)
+		{
+			<div style="color: green ">
+				<label>Element Added</label>
+			</div>
+		}
+		else
+		{
+			<div style="color: red ">
+				<label>Element already exist</label>
+			</div>
+		}
+	}
+
+	<div>
+		<label for="elementtext">Element text: </label>
+		<input type="text" @bind="@AddedElementText" id="elementtext" name="elementtext" />
+		<button class="btn btn-primary" @onclick="@OnAddButtonClick"> Add</button>
+	</div>
+}
+
+@code
+{
+	private bool? lastAddedElementValidity = null;
+
+	private IList<AddableListElement> addableElementsList;
+
+	private string AddedElementText = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		ResetedAddedElementText();
+
+		addableElementsList = await ListService.GetElementListAsync();
+	}
+
+	private void OnAddButtonClick()
+	{
+		AddableListElement newElement = new AddableListElement { Text = AddedElementText };
+
+		lastAddedElementValidity = AddedElementValidate(newElement);
+
+		if (lastAddedElementValidity == false)
+		{
+			return;
+		}
+
+		addableElementsList.Add(newElement);
+
+		ResetedAddedElementText();
+	}
+
+	private bool AddedElementValidate(AddableListElement element)
+	{
+		foreach (var item in addableElementsList)
+		{
+			if (item.Text == element.Text)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private void ResetedAddedElementText()
+	{
+		AddedElementText = default(string);
+	}
+}
